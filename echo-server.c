@@ -25,7 +25,8 @@ int main(int argc, char *argv[])
     // Allocate memory for client_pids
     //client_pids = (int **) malloc (MAX_CLIENTS * sizeof (int));
     for(int i = 0; i < MAX_CLIENTS; i++){
-      printf("Client PID %d:%d.\n", i, client_pids[i]);
+      client_pids[i] = -1; // Initialize all elements to -1 to start
+      //printf("Client PID %d:%d.\n", i, client_pids[i]);
     }
     char *listen_port;
     int listen_fd, conn_fd;
@@ -103,12 +104,12 @@ int main(int argc, char *argv[])
 
 void* client_func(void *data){
     for(int i = 0; i < MAX_CLIENTS; i++){
-      // if(client_pids[i] == NULL){
-      //   pid_t pid;
-      //   pid = getpid();
-      //   printf("I am the child. I am client %d. My pid is %d.\n", i, pid);
-      //   client_pids[i] = pid;
-      // }
+      if(client_pids[i] == -1){
+        pid_t pid;
+        pid = getpid();
+        printf("I am the child. I am client %d. My pid is %d.\n", i, pid);
+        client_pids[i] = pid;
+      }
       //printf("Client PID %d:%ls.\n", i, client_pids[i]);
     }
 
