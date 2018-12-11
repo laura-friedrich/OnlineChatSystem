@@ -19,6 +19,9 @@
 
 void *client_func(void *data);
 int client_pids[MAX_CLIENTS];
+int listen_fd, conn_fd;
+char buf[BUF_SIZE];
+int bytes_received;
 
 int main(int argc, char *argv[])
 {
@@ -29,15 +32,12 @@ int main(int argc, char *argv[])
       //printf("Client PID %d:%d.\n", i, client_pids[i]);
     }
     char *listen_port;
-    int listen_fd, conn_fd;
     struct addrinfo hints, *res;
     int rc;
     struct sockaddr_in remote_sa;
     uint16_t remote_port;
     socklen_t addrlen;
     char *remote_ip;
-    char buf[BUF_SIZE];
-    int bytes_received;
 
     listen_port = argv[1];
 
@@ -78,23 +78,7 @@ int main(int argc, char *argv[])
         pthread_t client_thread;
         pthread_create(&client_thread, NULL, client_func, NULL);
 
-        /* receive and echo data until the other end closes the connection */
-        while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
-            if(bytes_received == -1){
-              perror("recv error");
-            }
-            // for(int i = 0; i < BUF_SIZE; i++){
-            //   printf("%d", buf[i]);
-            // }
-            //printf("Buf: %s", buf);
-            // Change username
-            fflush(stdout);
 
-            /* send it back */
-            if(send(conn_fd, buf, bytes_received, 0) == -1){
-              perror("Send error");
-            }
-        }
         printf("\n");
 
         close(conn_fd);
@@ -103,15 +87,35 @@ int main(int argc, char *argv[])
 
 
 void* client_func(void *data){
+    pid_t pid;
+
     for(int i = 0; i < MAX_CLIENTS; i++){
       if(client_pids[i] == -1){
-        pid_t pid;
         pid = getpid();
-        printf("I am the child. I am client %d. My pid is %d.\n", i, pid);
+        printf("I am client %d. My pid is %d.\n", i, pid);
         client_pids[i] = pid;
         break; // Break once the pid has been assigned to array.
       }
       //printf("Client PID %d:%ls.\n", i, client_pids[i]);
+    }
+
+
+    /* receive and echo data until the other end closes the connection */
+    while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
+        if(bytes_received == -1){
+          perror("recv error");
+        }
+        // for(int i = 0; i < BUF_SIZE; i++){
+        //   printf("%d", buf[i]);
+        // }
+        printf("Buf: %s, PID: %d\n", buf, pid);
+        // Change username
+        fflush(stdout);
+
+        /* send it back */
+        if(send(conn_fd, buf, bytes_received, 0) == -1){
+          perror("Send error");
+        }
     }
 
 
