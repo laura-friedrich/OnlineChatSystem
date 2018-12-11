@@ -109,6 +109,7 @@ void* client_func(void *data){
         pid = getpid();
         printf("I am the child. I am client %d. My pid is %d.\n", i, pid);
         client_pids[i] = pid;
+        break; // Break once the pid has been assigned to array.
       }
       //printf("Client PID %d:%ls.\n", i, client_pids[i]);
     }
