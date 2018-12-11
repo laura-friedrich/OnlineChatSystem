@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         // New client thread
         pthread_t client_thread;
         pthread_create(&client_thread, NULL, client_func, NULL);
-
+        pthread_join(client_thread, NULL);
 
         printf("\n");
 
@@ -116,7 +116,9 @@ void* client_func(void *data){
         if(send(conn_fd, buf, bytes_received, 0) == -1){
           perror("Send error");
         }
-    }
+
+        read(0, buf, 1);
+      }
 
 
     return NULL;
