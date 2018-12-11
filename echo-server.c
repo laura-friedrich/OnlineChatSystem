@@ -65,10 +65,13 @@ int main(int argc, char *argv[])
 
         /* receive and echo data until the other end closes the connection */
         while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
+            if(bytes_received == -1){
+              perror("recv error");
+            }
             // for(int i = 0; i < BUF_SIZE; i++){
             //   printf("%d", buf[i]);
             // }
-            printf("Bytes recieved: %d", bytes_received);
+            printf("Buf: %s", buf);
             fflush(stdout);
 
             /* send it back */
