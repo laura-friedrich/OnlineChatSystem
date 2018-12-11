@@ -1,4 +1,4 @@
-CFLAGS=-g -Wall -pedantic
+CFLAGS=-g -Wall -pedantic -pthread
 .PHONY: all
 all: chat-server echo-server echo-client
 

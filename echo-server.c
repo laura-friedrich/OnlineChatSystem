@@ -11,9 +11,12 @@
 #include <string.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
+
+void *client_func(void *data);
 
 int main(int argc, char *argv[])
 {
@@ -63,6 +66,10 @@ int main(int argc, char *argv[])
         remote_port = ntohs(remote_sa.sin_port);
         printf("new connection from %s:%d\n", remote_ip, remote_port);
 
+        // New client thread
+        pthread_t client_thread;
+        pthread_create(&client_thread, NULL, client_func, NULL);
+
         /* receive and echo data until the other end closes the connection */
         while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
             if(bytes_received == -1){
@@ -71,7 +78,8 @@ int main(int argc, char *argv[])
             // for(int i = 0; i < BUF_SIZE; i++){
             //   printf("%d", buf[i]);
             // }
-            printf("Buf: %s", buf);
+            //printf("Buf: %s", buf);
+            // Change username
             fflush(stdout);
 
             /* send it back */
@@ -83,4 +91,14 @@ int main(int argc, char *argv[])
 
         close(conn_fd);
     }
+}
+
+
+void* client_func(void *data){
+    pid_t pid;
+
+    pid = getpid();
+    printf("I am the child.  My pid is %d.\n", pid);
+
+    return NULL;
 }
