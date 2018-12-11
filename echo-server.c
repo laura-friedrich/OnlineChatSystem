@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
             // for(int i = 0; i < BUF_SIZE; i++){
             //   printf("%d", buf[i]);
             // }
+            printf("Bytes recieved: %s", bytes_received);
             fflush(stdout);
 
             /* send it back */
