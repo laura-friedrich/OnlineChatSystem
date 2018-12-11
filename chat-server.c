@@ -76,7 +76,11 @@ int main(int argc, char *argv[])
 
     // New client thread
     pthread_t client_thread;
-    pthread_create(&client_thread, NULL, client_func, NULL);
+    int ret = pthread_create(&client_thread, NULL, client_func, NULL);
+     if (ret) {
+      printf("ERROR: Return Code from pthread_create() is %d\n", ret);
+      exit(1);
+     }
     pthread_join(client_thread, NULL);
 
     printf("\n");
@@ -89,7 +93,7 @@ int main(int argc, char *argv[])
 void* client_func(void *data){
   int sockfd, ret;
   char buffer[BUF_SIZE];
-  sockfd = (int) socket;
+  sockfd = (int) data;
   memset(buffer, 0, BUF_SIZE);
   for (;;) {
     ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);

@@ -11,4 +11,4 @@ chat-client: chat-client.c
 
 .PHONY: clean
 clean:
-	rm -f chat-server echo-server echo-client
+	rm -f chat-server chat-client

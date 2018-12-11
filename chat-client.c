@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[])
 {
-    printf("Starting echo-client");
+    printf("Starting chat-client");
     char *dest_hostname, *dest_port;
     struct addrinfo hints, *res;
     int conn_fd;
