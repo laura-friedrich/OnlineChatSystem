@@ -15,17 +15,17 @@
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
-#define MAX_CLIENTS 1024
+#define MAX_CLIENTS 256
 
 void *client_func(void *data);
-int** client_pids;
+int client_pids[MAX_CLIENTS];
 
 int main(int argc, char *argv[])
 {
     // Allocate memory for client_pids
-    client_pids = (int **) malloc (MAX_CLIENTS * sizeof (int));
+    //client_pids = (int **) malloc (MAX_CLIENTS * sizeof (int));
     for(int i = 0; i < MAX_CLIENTS; i++){
-      printf("Client PID %d:%ls.\n", i, client_pids[i]);
+      printf("Client PID %d:%d.\n", i, client_pids[i]);
     }
     char *listen_port;
     int listen_fd, conn_fd;
@@ -102,10 +102,16 @@ int main(int argc, char *argv[])
 
 
 void* client_func(void *data){
-    pid_t pid;
+    for(int i = 0; i < MAX_CLIENTS; i++){
+      // if(client_pids[i] == NULL){
+      //   pid_t pid;
+      //   pid = getpid();
+      //   printf("I am the child. I am client %d. My pid is %d.\n", i, pid);
+      //   client_pids[i] = pid;
+      // }
+      //printf("Client PID %d:%ls.\n", i, client_pids[i]);
+    }
 
-    pid = getpid();
-    printf("I am the child.  My pid is %d.\n", pid);
 
     return NULL;
 }
