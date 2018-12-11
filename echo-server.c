@@ -61,7 +61,9 @@ int main(int argc, char *argv[])
 
         /* receive and echo data until the other end closes the connection */
         while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
-            printf(".");
+            for(int i = 0; i < BUF_SIZE; i++){
+              printf("%s", buf[i]);
+            }
             fflush(stdout);
 
             /* send it back */
@@ -72,4 +74,3 @@ int main(int argc, char *argv[])
         close(conn_fd);
     }
 }
-

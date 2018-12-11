@@ -15,6 +15,7 @@
 
 int main(int argc, char *argv[])
 {
+    printf("Starting echo-client");
     char *dest_hostname, *dest_port;
     struct addrinfo hints, *res;
     int conn_fd;
@@ -59,4 +60,3 @@ int main(int argc, char *argv[])
 
     close(conn_fd);
 }
-
