@@ -15,11 +15,18 @@
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
+#define MAX_CLIENTS 1024
 
 void *client_func(void *data);
+int** client_pids;
 
 int main(int argc, char *argv[])
 {
+    // Allocate memory for client_pids
+    client_pids = (int **) malloc (MAX_CLIENTS * sizeof (int));
+    for(int i = 0; i < MAX_CLIENTS; i++){
+      printf("Client PID %d:%ls.\n", i, client_pids[i]);
+    }
     char *listen_port;
     int listen_fd, conn_fd;
     struct addrinfo hints, *res;
