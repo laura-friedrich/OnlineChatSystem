@@ -43,10 +43,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    bind(listen_fd, res->ai_addr, res->ai_addrlen);
+    if (bind(listen_fd, res->ai_addr, res->ai_addrlen) == -1){
+      perror("Bind error.");
+    }
 
     /* start listening */
-    listen(listen_fd, BACKLOG);
+    if(listen(listen_fd, BACKLOG) == -1){
+      perror("Listen error");
+    }
 
     /* infinite loop of accepting new connections and handling them */
     while(1) {
@@ -62,12 +66,14 @@ int main(int argc, char *argv[])
         /* receive and echo data until the other end closes the connection */
         while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
             for(int i = 0; i < BUF_SIZE; i++){
-              printf("%s", buf[i]);
+              printf("%d", buf[i]);
             }
             fflush(stdout);
 
             /* send it back */
-            send(conn_fd, buf, bytes_received, 0);
+            if(send(conn_fd, buf, bytes_received, 0) == -1){
+              perror("Send error");
+            }
         }
         printf("\n");
 
