@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
     // New client thread
     pthread_t client_thread;
-    int ret = pthread_create(&client_thread, NULL, client_func, NULL);
+    int ret = pthread_create(&client_thread, NULL, client_func, remote_ip);
      if (ret) {
       printf("ERROR: Return Code from pthread_create() is %d\n", ret);
       exit(1);
@@ -91,54 +91,40 @@ int main(int argc, char *argv[])
 
 
 void* client_func(void *data){
-  int sockfd, ret;
-  char buffer[BUF_SIZE];
-  sockfd = (int) data;
-  memset(buffer, 0, BUF_SIZE);
-  for (;;) {
-    ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
-    if (ret < 0) {
-      printf("Error receiving data!\n");
-    } else {
-      printf("client: ");
-      fputs(buffer, stdout);
-      //printf("\n");
+  int remote_ip = (int) data;
+  pid_t pid;
+
+  for(int i = 0; i < MAX_CLIENTS; i++){
+    if(client_pids[i] == -1){
+      pid = getpid();
+      printf("I am client %d. My pid is %d. My remote ip %d.\n", i, pid, remote_ip);
+      client_pids[i] = pid;
+      break; // Break once the pid has been assigned to array.
     }
+    //printf("Client PID %d:%ls.\n", i, client_pids[i]);
   }
 
-  // pid_t pid;
-  //
-  // for(int i = 0; i < MAX_CLIENTS; i++){
-  //   if(client_pids[i] == -1){
-  //     pid = getpid();
-  //     printf("I am client %d. My pid is %d.\n", i, pid);
-  //     client_pids[i] = pid;
-  //     break; // Break once the pid has been assigned to array.
-  //   }
-  //   //printf("Client PID %d:%ls.\n", i, client_pids[i]);
-  // }
-  //
-  //
-  // /* receive and echo data until the other end closes the connection */
-  // while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
-  //     if(bytes_received == -1){
-  //       perror("recv error");
-  //     }
-  //     // for(int i = 0; i < BUF_SIZE; i++){
-  //     //   printf("%d", buf[i]);
-  //     // }
-  //     printf("Buf: %s, PID: %d\n", buf, pid);
-  //     // Change username
-  //     fflush(stdout);
-  //
-  //     /* send it back */
-  //     if(send(conn_fd, buf, bytes_received, 0) == -1){
-  //       perror("Send error");
-  //     }
-  //
-  //     read(0, buf, 1);
-  //   }
-  //
-  //
-  // return NULL;
+
+  /* receive and echo data until the other end closes the connection */
+  while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
+      if(bytes_received == -1){
+        perror("recv error");
+      }
+      // for(int i = 0; i < BUF_SIZE; i++){
+      //   printf("%d", buf[i]);
+      // }
+      printf("Buf: %s, PID: %d\n", buf, pid);
+      // Change username
+      fflush(stdout);
+
+      /* send it back */
+      if(send(conn_fd, buf, bytes_received, 0) == -1){
+        perror("Send error");
+      }
+
+      read(0, buf, 1);
+    }
+
+
+  return NULL;
 }
