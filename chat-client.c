@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         exit(2);
     }
 
-    printf("Connected\n");
+    printf("\nConnected\n");
 
     /* infinite loop of reading from terminal, sending the data, and printing
      * what we get back */
@@ -54,8 +54,12 @@ int main(int argc, char *argv[])
         send(conn_fd, buf, n, 0);
 
         n = recv(conn_fd, buf, BUF_SIZE, 0);
-        printf("received: ");
-        puts(buf);
+        if(strcmp(buf, "000") == 0){
+          printf("\nConnected\n");
+        }else{
+          puts(buf);
+        }
+        fflush(stdout);
     }
 
     close(conn_fd);
