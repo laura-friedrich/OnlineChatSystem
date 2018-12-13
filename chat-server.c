@@ -91,13 +91,13 @@ int main(int argc, char *argv[])
 
 
 void* client_func(void *data){
-  int remote_ip = (int) data;
+  char* remote_ip = data;
   pid_t pid;
 
   for(int i = 0; i < MAX_CLIENTS; i++){
     if(client_pids[i] == -1){
       pid = getpid();
-      printf("I am client %d. My pid is %d. My remote ip %d.\n", i, pid, remote_ip);
+      printf("I am client %d. My pid is %d. My remote ip %s.\n", i, pid, remote_ip);
       client_pids[i] = pid;
       break; // Break once the pid has been assigned to array.
     }
