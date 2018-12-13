@@ -106,7 +106,7 @@ void* client_func(void *data){
         perror("recv error");
       }
 
-      printf("Bytes recieved %d: ", bytes_received);
+      //printf("Bytes recieved %d: ", bytes_received);
       if(strcmp(buf, "/nick")){}
       // Change username
       fflush(stdout);
@@ -117,8 +117,8 @@ void* client_func(void *data){
       }
       // Send message to all clients
       for(int i = 0; i < clientCounter; i++){
-         printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
-         if(send(clients[i]->conn_fd, "MESSAGE", 8, 0) == -1){
+        // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
+         if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
            perror("Error sending to all clients.");
          }
        }

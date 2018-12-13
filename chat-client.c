@@ -10,17 +10,20 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <string.h>
+#include <pthread.h>
 
 #define BUF_SIZE 4096
+
+int conn_fd;
+void* listenForCommands(void *data);
+void* writeCommands(void *data);
 
 int main(int argc, char *argv[])
 {
     printf("Starting chat-client");
     char *dest_hostname, *dest_port;
     struct addrinfo hints, *res;
-    int conn_fd;
-    char buf[BUF_SIZE];
-    int n;
+    //int n;
     int rc;
 
     dest_hostname = argv[1];
@@ -50,17 +53,58 @@ int main(int argc, char *argv[])
 
     /* infinite loop of reading from terminal, sending the data, and printing
      * what we get back */
-    while((n = read(0, buf, BUF_SIZE)) > 0) {
-        send(conn_fd, buf, n, 0);
 
-        n = recv(conn_fd, buf, BUF_SIZE, 0);
-        if(strcmp(buf, "000") == 0){
-          printf("\nConnected\n");
-        }else{
-          puts(buf);
-        }
-        fflush(stdout);
+    pthread_t listen_thread, write_thread;
+    int ret;
+    if((ret = pthread_create(&listen_thread, NULL, listenForCommands, NULL))){
+      printf("ERROR: Return Code from pthread_create() is %d\n", ret);
     }
 
-    close(conn_fd);
+    if((ret = pthread_create(&write_thread, NULL, writeCommands, NULL))){
+      printf("ERROR: Return Code from pthread_create() is %d\n", ret);
+    }
+
+    pthread_join(write_thread, NULL);
+    pthread_join(listen_thread, NULL);
+
+    fflush(stdout);
+
+
+    //close(conn_fd);
+}
+
+
+void* writeCommands(void *data){
+char buf[BUF_SIZE];
+int n;
+  while((n = read(0, buf, BUF_SIZE)) > 0){
+    //puts(buf);
+    if(send(conn_fd, buf, n, 0) == -1){
+      perror("Failed to send.");
+    }
+      // n = recv(conn_fd, buf, BUF_SIZE, 0);
+      // if(strcmp(buf, "000") == 0){
+      //   printf("\nConnected\n");
+      // }else{
+      //   puts(buf);
+      // }
+    }
+    //printf("writeCommands returning");
+  return NULL;
+}
+
+void* listenForCommands(void *data){
+  char buf[BUF_SIZE];
+  int n;
+  while(0 == 0){
+    n = recv(conn_fd, buf, BUF_SIZE, 0);
+    if(n > 0){
+      //printf("N is greater than 0 (%d).\n", n);
+      puts(buf);
+    }
+    //fflush(stdout);
+  }
+
+  //printf("listenForCommands returning");
+  return NULL;
 }
