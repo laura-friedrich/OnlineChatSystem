@@ -17,20 +17,21 @@
 #define BUF_SIZE 4096
 #define MAX_CLIENTS 256
 
+
+typedef struct ClientStruct{
+    int conn_fd;
+    char *name;
+    char *remote_ip;
+    int remote_port;
+}ClientStruct;
+
 void *client_func(void *data);
-int client_pids[MAX_CLIENTS];
-int listen_fd, conn_fd;
 char buf[BUF_SIZE];
 int bytes_received;
 
 int main(int argc, char *argv[])
 {
   // Allocate memory for client_pids
-  //client_pids = (int **) malloc (MAX_CLIENTS * sizeof (int));
-  for(int i = 0; i < MAX_CLIENTS; i++){
-    client_pids[i] = -1; // Initialize all elements to -1 to start
-    //printf("Client PID %d:%d.\n", i, client_pids[i]);
-  }
   char *listen_port;
   struct addrinfo hints, *res;
   int rc;
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
   uint16_t remote_port;
   socklen_t addrlen;
   char *remote_ip;
+  int listen_fd;
 
   listen_port = argv[1];
 
@@ -65,18 +67,26 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {
+    struct ClientStruct *data_for_thread = malloc(sizeof(struct ClientStruct));
+
     /* accept a new connection (will block until one appears) */
     addrlen = sizeof(remote_sa);
-    conn_fd = accept(listen_fd, (struct sockaddr *) &remote_sa, &addrlen);
+    int conn_fd = accept(listen_fd, (struct sockaddr *) &remote_sa, &addrlen);
 
     /* announce our communication partner */
     remote_ip = inet_ntoa(remote_sa.sin_addr);
     remote_port = ntohs(remote_sa.sin_port);
-    printf("new connection from %s:%d\n", remote_ip, remote_port);
+
+    data_for_thread->conn_fd = conn_fd;
+    data_for_thread->remote_ip = remote_ip;
+    data_for_thread->remote_port = remote_port;
+    data_for_thread->name = "Unknown";
+
+    printf("new connection from %s:%d\n", data_for_thread->remote_ip, data_for_thread->remote_port);
 
     // New client thread
     pthread_t client_thread;
-    int ret = pthread_create(&client_thread, NULL, client_func, remote_ip);
+    int ret = pthread_create(&client_thread, NULL, client_func, data_for_thread);
      if (ret) {
       printf("ERROR: Return Code from pthread_create() is %d\n", ret);
       exit(1);
@@ -91,40 +101,23 @@ int main(int argc, char *argv[])
 
 
 void* client_func(void *data){
-  char* remote_ip = data;
-  pid_t pid;
-
-  for(int i = 0; i < MAX_CLIENTS; i++){
-    if(client_pids[i] == -1){
-      pid = getpid();
-      printf("I am client %d. My pid is %d. My remote ip %s.\n", i, pid, remote_ip);
-      client_pids[i] = pid;
-      break; // Break once the pid has been assigned to array.
-    }
-    //printf("Client PID %d:%ls.\n", i, client_pids[i]);
-  }
-
+  struct ClientStruct *client_data = data;
 
   /* receive and echo data until the other end closes the connection */
-  while((bytes_received = recv(conn_fd, buf, BUF_SIZE, 0)) > 0) {
+  while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > 0) {
       if(bytes_received == -1){
         perror("recv error");
       }
-      // for(int i = 0; i < BUF_SIZE; i++){
-      //   printf("%d", buf[i]);
-      // }
-      printf("Buf: %s, PID: %d\n", buf, pid);
+
       // Change username
       fflush(stdout);
 
       /* send it back */
-      if(send(conn_fd, buf, bytes_received, 0) == -1){
+      if(send(client_data->conn_fd, buf, bytes_received, 0) == -1){
         perror("Send error");
       }
-
       read(0, buf, 1);
     }
-
 
   return NULL;
 }
