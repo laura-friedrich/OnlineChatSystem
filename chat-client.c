@@ -67,44 +67,40 @@ int main(int argc, char *argv[])
     pthread_join(write_thread, NULL);
     pthread_join(listen_thread, NULL);
 
-    fflush(stdout);
-
-
-    //close(conn_fd);
+    //fflush(stdout);
+    close(conn_fd);
 }
 
 
 void* writeCommands(void *data){
-char buf[BUF_SIZE];
-int n;
+  char** buf = (char **) malloc(BUF_SIZE * sizeof(char));
+  int n;
   while((n = read(0, buf, BUF_SIZE)) > 0){
-    //puts(buf);
-    if(send(conn_fd, buf, n, 0) == -1){
-      perror("Failed to send.");
+    unsigned int lenBuf = (unsigned int) strlen(buf);
+    if (buf[lenBuf - 1] == '\n' && lenBuf == 1){
+      // Don't do anything if empty input
+    }else{
+      int length = strlen(buf) - 1; // Take off the newline character
+      char ** inputText = (char **) malloc(length * sizeof(char));
+      strncpy(inputText, buf, strlen(buf) - 1);
+      if(send(conn_fd, inputText, n, 0) == -1){
+        perror("Failed to send.");
+      }
+
     }
-      // n = recv(conn_fd, buf, BUF_SIZE, 0);
-      // if(strcmp(buf, "000") == 0){
-      //   printf("\nConnected\n");
-      // }else{
-      //   puts(buf);
-      // }
-    }
+    buf = (char **) malloc(BUF_SIZE * sizeof(char));
     //printf("writeCommands returning");
+  }
   return NULL;
 }
 
 void* listenForCommands(void *data){
   char buf[BUF_SIZE];
   int n;
-  while(0 == 0){
-    n = recv(conn_fd, buf, BUF_SIZE, 0);
-    if(n > 0){
-      //printf("N is greater than 0 (%d).\n", n);
-      puts(buf);
-    }
-    //fflush(stdout);
+  while((n = recv(conn_fd, buf, BUF_SIZE, 0)) > 0){
+    //printf("N is greater than 0 (%d).\n", n);
+    puts(buf);
   }
-
-  //printf("listenForCommands returning");
   return NULL;
+    //fflush(stdout);
 }

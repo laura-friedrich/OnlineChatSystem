@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <time.h>
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
@@ -112,15 +113,26 @@ void* client_func(void *data){
       fflush(stdout);
 
       /* send it back */
-      if(send(client_data->conn_fd, buf, bytes_received, 0) == -1){
-        perror("Send error");
-      }
+      // if(send(client_data->conn_fd, buf, bytes_received, 0) == -1){
+      //   perror("Send error");
+      // }
+
+      // Get the current time
+      // time_t rawtime;
+      // struct tm * timeinfo;
+      // time (&rawtime);
+      // timeinfo = localtime (&rawtime);
+        //printf ( "Current local time and date: %s", asctime (timeinfo) );
       // Send message to all clients
       for(int i = 0; i < clientCounter; i++){
         // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
+        //if()
          if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
            perror("Error sending to all clients.");
          }
+         // if(send(clients[i]->conn_fd, timeinfo, sizeof(timeinfo), 0) == -1){
+         //    perror("Error sending tieminfo to all clients.");
+         //  }
        }
 
       //read(0, buf, 1);
