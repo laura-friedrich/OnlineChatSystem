@@ -13,11 +13,11 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <time.h>
+#include <signal.h>
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
 #define MAX_CLIENTS 256
-#define DEFAULT_CLIENT_COUNT 10
 #define MAX_NUMBER_OF_ARGS 100
 
 typedef struct ClientStruct{
@@ -25,15 +25,19 @@ typedef struct ClientStruct{
   char *name;
   char *remote_ip;
   int remote_port;
+  pthread_t thread;
+  pid_t pid;
+  int clientNumber;
 }ClientStruct;
 
+int DEFAULT_CLIENT_COUNT = 2;
 void *client_func(void *data);
-struct ClientStruct *clients[DEFAULT_CLIENT_COUNT];
+struct ClientStruct **clients;
 int clientCounter = 0;
-int getNumberOfArgs(char** args);
-
 int main(int argc, char *argv[])
 {
+  // Allocate memory for clients
+  clients = malloc(DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
   // Allocate memory for client_pids
   char *listen_port;
   struct addrinfo hints, *res;
@@ -67,6 +71,10 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {
+    if(clientCounter > DEFAULT_CLIENT_COUNT){
+      DEFAULT_CLIENT_COUNT = DEFAULT_CLIENT_COUNT * 2;
+      clients = realloc(clients, DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
+    }
     clients[clientCounter] = malloc(sizeof(struct ClientStruct));
     /* accept a new connection (will block until one appears) */
     socklen_t addrlen = sizeof(remote_sa);
@@ -76,15 +84,18 @@ int main(int argc, char *argv[])
     char *remote_ip = inet_ntoa(remote_sa.sin_addr);
     uint16_t remote_port = ntohs(remote_sa.sin_port);
 
+    pthread_t client_thread;
+
     clients[clientCounter]->conn_fd = conn_fd;
     clients[clientCounter]->remote_ip = remote_ip;
     clients[clientCounter]->remote_port = remote_port;
     clients[clientCounter]->name = "Unknown";
+    clients[clientCounter]->thread = client_thread;
+    clients[clientCounter]->clientNumber = clientCounter;
 
     printf("new connection from %s:%d\n", clients[clientCounter]->remote_ip, clients[clientCounter]->remote_port);
 
     // New client thread
-    pthread_t client_thread;
     int ret = pthread_create(&client_thread, NULL, client_func, clients[clientCounter]);
     if (ret) {
       printf("ERROR: Return Code from pthread_create() is %d\n", ret);
@@ -102,24 +113,23 @@ void* client_func(void *data){
   int bytes_received = 0;
   char buf[BUF_SIZE];
   struct ClientStruct *client_data = data;
-
+  pid_t clientPID;
+  clientPID = getpid();
+  clients[client_data->clientNumber]->pid = clientPID; // Assigning pid to process
   /* receive and echo data until the other end closes the connection */
   while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > 0) {
+    buf[bytes_received] = '\0';// Make last byte the null byte
     if(bytes_received == -1){
       perror("recv error");
     }
-
-    //printf("Bytes recieved %d: ", bytes_received);
-    char subbuf[6];
-    memcpy(subbuf,buf,5);
-    //printf("subbuf is %s this sting\n",subbuf);
     if(strncmp(buf, "/nick", 5)==0){
       char nickName[bytes_received];
-      memcpy(nickName,(char*)buf+6,bytes_received-5);
-      char sendBuf [40];
+      memcpy(nickName,(char*)buf+6,bytes_received-6);
+      nickName[bytes_received-7] = '\0';// Make last byte the null byte
+      char sendBuf [512];
       sprintf(sendBuf,"User %s (%s:%d) is now known as %s", client_data->name, client_data->remote_ip, client_data->remote_port, nickName);
       puts(sendBuf);
-      client_data->name = malloc(strlen(nickName) + 1);
+      client_data->name = malloc(sizeof(nickName) * 2);
       strcpy(client_data->name , nickName);
       //printf()
       for(int i = 0; i < clientCounter; i++){
@@ -127,39 +137,29 @@ void* client_func(void *data){
           perror("Error sending to all clients.");
         }
       }
-    }else if (strcmp(subbuf, "Exiti")==0){
-      char sendBuf [40];
+      fflush(stdout);
+
+    }else if (strncmp(buf, "#&#SD9s", 7)==0){
+      char sendBuf [512];
       sprintf(sendBuf,"User %s (%s:%d) has disconnected", client_data->name, client_data->remote_ip, client_data->remote_port);
       for(int i = 0; i < clientCounter; i++){
         if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
           perror("Error sending to all clients.");
         }
       }
+      //kill(clientPID, 0);
       puts(sendBuf);
       fflush(stdout);
-    }else{
+    }else{ // Send mesage back with name
       for(int i = 0; i < clientCounter; i++){
-        if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
+        char sendBuf [8192];
+        sprintf(sendBuf, "%s: %s", client_data->name, buf);
+        if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
           perror("Error sending to all clients.");
         }
       }
       fflush(stdout);
-
     }
-
   }
-
   return NULL;
-}
-
-int getNumberOfArgs(char** args){
-  int argCounter = 0;
-  for(int i = 0; i < MAX_NUMBER_OF_ARGS; i++){
-    if(args[i] != NULL){
-      argCounter++;
-    }else{
-      break;
-    }
-  }
-  return argCounter;
 }
