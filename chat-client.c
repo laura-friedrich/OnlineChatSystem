@@ -119,8 +119,8 @@ void* listenForCommands(void *data){
     //printf ( "Current local time and date: %s", asctime (timeinfo) );
     printf("%s", buffer);
     //printf("time is %d\n", currentTime );
-    
-    printf("%s:", )
+
+    //printf("%s:", )
     puts(buf);
 
     memset(buf, 0, strlen(buf));

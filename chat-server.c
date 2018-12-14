@@ -110,8 +110,8 @@ void* client_func(void *data){
     }
 
     //printf("Bytes recieved %d: ", bytes_received);
-    //char subbuf[6];
-    //memcpy(subbuf,buf,5);
+    char subbuf[6];
+    memcpy(subbuf,buf,5);
     //printf("subbuf is %s this sting\n",subbuf);
     if(strncmp(buf, "/nick", 5)==0){
       char nickName[bytes_received];
