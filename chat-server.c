@@ -17,7 +17,6 @@
 
 #define BACKLOG 10
 #define BUF_SIZE 4096
-#define MAX_CLIENTS 256
 #define MAX_NUMBER_OF_ARGS 100
 
 typedef struct ClientStruct{
@@ -123,10 +122,19 @@ void* client_func(void *data){
   clientPID = getpid();
   clients[client_data->clientNumber]->pid = clientPID; // Assigning pid to process
   /* receive and echo data until the other end closes the connection */
-  while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > 0) {
+  while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > -1) {
     buf[bytes_received] = '\0';// Make last byte the null byte
-    if(bytes_received == -1){
-      perror("recv error");
+    if(bytes_received == 0){
+      char sendBuf [512];
+      sprintf(sendBuf,"User %s (%s:%d) has disconnected", client_data->name, client_data->remote_ip, client_data->remote_port);
+      for(int i = 0; i < clientCounter; i++){
+        if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
+          perror("Error sending to all clients.");
+        }
+      }
+      //kill(clientPID, 0);
+      puts(sendBuf);
+      fflush(stdout);
     }
     if(strncmp(buf, "/nick ", 6)==0){
       char nickName[bytes_received];
@@ -145,17 +153,6 @@ void* client_func(void *data){
       }
       fflush(stdout);
 
-    }else if (strncmp(buf, "#&#SD9s", 7)==0){
-      char sendBuf [512];
-      sprintf(sendBuf,"User %s (%s:%d) has disconnected", client_data->name, client_data->remote_ip, client_data->remote_port);
-      for(int i = 0; i < clientCounter; i++){
-        if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
-          perror("Error sending to all clients.");
-        }
-      }
-      //kill(clientPID, 0);
-      puts(sendBuf);
-      fflush(stdout);
     }else{ // Send mesage back with name
       for(int i = 0; i < clientCounter; i++){
         char sendBuf [8192];

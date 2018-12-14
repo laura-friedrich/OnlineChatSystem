@@ -96,9 +96,6 @@ void* writeCommands(void *data){
       }
     }
   }
-  if(send(conn_fd, "#&#SD9s", 8, 0) == -1){
-    perror("Failed to send.");
-  }
   puts("Exiting.");
   exit(0);
   return NULL;
