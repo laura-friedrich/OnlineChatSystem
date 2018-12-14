@@ -110,12 +110,12 @@ void* client_func(void *data){
     }
 
     //printf("Bytes recieved %d: ", bytes_received);
-    char subbuf[6];
-    memcpy(subbuf,buf,5);
+    //char subbuf[6];
+    //memcpy(subbuf,buf,5);
     //printf("subbuf is %s this sting\n",subbuf);
-    if(strcmp(subbuf, "/nick")==0){
+    if(strncmp(buf, "/nick", 5)==0){
       char nickName[bytes_received];
-      memcpy(nickName,(char*)buf+6,bytes_received-6);
+      memcpy(nickName,(char*)buf+6,bytes_received-5);
       char sendBuf [40];
       sprintf(sendBuf,"User %s (%s) is now known as %s", client_data->name, client_data->remote_ip, nickName);
       puts(sendBuf);
