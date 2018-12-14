@@ -94,6 +94,12 @@ void* writeCommands(void *data){
     // Clear buf
     //printf("writeCommands returning");
   }
+
+  if(send(conn_fd, "Exiting", 8, 0) == -1){
+    perror("Failed to send.");
+  }
+  puts("Exiting.");
+  exit(0);
   return NULL;
 }
 
@@ -108,8 +114,10 @@ void* listenForCommands(void *data){
     struct tm * timeinfo;
     time (&rawtime);
     timeinfo = localtime (&rawtime);
+    char buffer[80];
+    strftime(buffer, 80,"%H:%M:%S: ", timeinfo);
     //printf ( "Current local time and date: %s", asctime (timeinfo) );
-    printf("%d:%d:%d: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    printf("%s", buffer);
     //printf("time is %d\n", currentTime );
     
     printf("%s:", )
