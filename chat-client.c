@@ -94,6 +94,12 @@ void* writeCommands(void *data){
     // Clear buf
     //printf("writeCommands returning");
   }
+
+  if(send(conn_fd, "Exiting", 8, 0) == -1){
+    perror("Failed to send.");
+  }
+  puts("Exiting.");
+  exit(0);
   return NULL;
 }
 
