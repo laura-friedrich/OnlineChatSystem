@@ -65,11 +65,13 @@ int main(int argc, char *argv[])
 
   if (bind(listen_fd, res->ai_addr, res->ai_addrlen) == -1){
     perror("Bind error.");
+    exit(1);
   }
 
   /* start listening */
   if(listen(listen_fd, BACKLOG) == -1){
     perror("Listen error");
+    exit(1);
   }
 
   /* infinite loop of accepting new connections and handling them */
@@ -84,6 +86,7 @@ int main(int argc, char *argv[])
     int conn_fd = accept(listen_fd, (struct sockaddr *) &remote_sa, &addrlen);
     if(conn_fd == -1){
       perror("Error accepting connection.");
+      exit(0);
     }
 
     /* announce our communication partner */

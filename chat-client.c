@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
   conn_fd = socket(PF_INET, SOCK_STREAM, 0);
   if(conn_fd == -1){
     perror("Failed to create socket");
+    exit(1);
   }
 
   /* client usually doesn't bind, which lets kernel pick a port number */
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
 
   if(close(conn_fd) == -1){
     perror("Error closing connection");
+    exit(1);
   }
 }
 
@@ -110,6 +112,7 @@ void* listenForCommands(void *data){
     struct tm * timeinfo;
     if (time (&rawtime) == -1){
       perror("Error getting time.");
+      exit(0);
     }else{
       timeinfo = localtime (&rawtime);
       char buffer[80];
