@@ -114,9 +114,34 @@ void* client_func(void *data){
       if(strcmp(subbuf, "/nick")==0){
         char nickName[bytes_received];
         printf("%d",bytes_received);
-        memcpy(nickName,(char*)buf+5,bytes_received-5);
+        memcpy(nickName,(char*)buf+6,bytes_received-6);
         printf("%s\n",nickName );
-        clients[clientCounter]->name = nickName;
+
+        char sendBuf [40];
+        sprintf(sendBuf,"User %s (%s) is now known as %s", client_data->name, client_data->remote_ip, nickName );
+        client_data->name = nickName;
+        //printf()
+        for(int i = 0; i < clientCounter; i++){
+          if(send(clients[i]->conn_fd,sendBuf , sizeof(buf), 0) == -1){
+            perror("Error sending to all clients.");
+          }
+        }
+      }
+      else{
+        for(int i = 0; i < clientCounter; i++){
+          // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
+          //if()
+          char sendBuf [5095];
+          sprintf(sendBuf, "%s: %s", client_data->name, buf);
+
+
+          if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
+            perror("Error sending to all clients.");
+          }
+           //if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
+             //perror("Error sending to all clients.");
+           //}
+
       }
       // Change username
       fflush(stdout);
@@ -133,12 +158,7 @@ void* client_func(void *data){
       // timeinfo = localtime (&rawtime);
         //printf ( "Current local time and date: %s", asctime (timeinfo) );
       // Send message to all clients
-      for(int i = 0; i < clientCounter; i++){
-        // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
-        //if()
-         if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
-           perror("Error sending to all clients.");
-         }
+
          // if(send(clients[i]->conn_fd, timeinfo, sizeof(timeinfo), 0) == -1){
          //    perror("Error sending tieminfo to all clients.");
          //  }
