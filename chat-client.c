@@ -108,7 +108,7 @@ void* listenForCommands(void *data){
     //printf ( "Current local time and date: %s", asctime (timeinfo) );
     printf("%d:%d:%d: ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     //printf("time is %d\n", currentTime );
-    
+
     puts(buf);
   }
   return NULL;

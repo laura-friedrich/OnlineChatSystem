@@ -108,11 +108,15 @@ void* client_func(void *data){
       }
 
       //printf("Bytes recieved %d: ", bytes_received);
-      char subbuf[5];
+      char subbuf[6];
       memcpy(subbuf,buf,5);
-      printf("subbuf is %s this sting\n",subbuf);
+      //printf("subbuf is %s this sting\n",subbuf);
       if(strcmp(subbuf, "/nick")==0){
-        printf("HIHELLO\n");
+        char nickName[bytes_received];
+        printf("%d",bytes_received);
+        memcpy(nickName,(char*)buf+5,bytes_received-5);
+        printf("%s\n",nickName );
+        clients[clientCounter]->name = nickName;
       }
       // Change username
       fflush(stdout);
