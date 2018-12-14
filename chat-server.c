@@ -128,7 +128,7 @@ void* client_func(void *data){
     if(bytes_received == -1){
       perror("recv error");
     }
-    if(strncmp(buf, "/nick", 5)==0){
+    if(strncmp(buf, "/nick ", 6)==0){
       char nickName[bytes_received];
       memcpy(nickName,(char*)buf+6,bytes_received-6);
       nickName[bytes_received-7] = '\0';// Make last byte the null byte
