@@ -104,7 +104,11 @@ void* writeCommands(void *data){
 void* listenForCommands(void *data){
   char buf[BUF_SIZE];
   int n;
-  while((n = recv(conn_fd, buf, BUF_SIZE, 0)) > 0){
+  while((n = recv(conn_fd, buf, BUF_SIZE, 0)) > -1){
+    if(n == 0){
+      puts("Connection closed by remote host.");
+      exit(0);
+    }
     time_t rawtime;
     struct tm * timeinfo;
     if (time (&rawtime) == -1){
@@ -119,7 +123,5 @@ void* listenForCommands(void *data){
       memset(buf, 0, strlen(buf));
     }
   }
-  puts("Connection closed by remote host.");
-  exit(0);
   return NULL;
 }

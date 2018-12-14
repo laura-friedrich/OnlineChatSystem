@@ -125,18 +125,29 @@ void* client_func(void *data){
   while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > -1) {
     buf[bytes_received] = '\0';// Make last byte the null byte
     if(bytes_received == 0){
+      //free(clients[client_data->clientNumber]);
+
       char sendBuf [512];
       sprintf(sendBuf,"User %s (%s:%d) has disconnected", client_data->name, client_data->remote_ip, client_data->remote_port);
       for(int i = 0; i < clientCounter; i++){
-        if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
-          perror("Error sending to all clients.");
+        if(i != client_data->clientNumber){
+          if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
+            perror("Error sending to all clients.");
+          }
         }
       }
+
+      for (int c = client_data->clientNumber; c < DEFAULT_CLIENT_COUNT; c++){ // Reassign other indices of clients
+         clients[c + 1]->clientNumber = c;
+         clients[c] = clients[c+1];
+       }
+       free(client_data); // Free struct
+       clientCounter--;
+
       //kill(clientPID, 0);
       puts(sendBuf);
       fflush(stdout);
-    }
-    if(strncmp(buf, "/nick ", 6)==0){
+    }else if(strncmp(buf, "/nick ", 6)==0){
       char nickName[bytes_received];
       memcpy(nickName,(char*)buf+6,bytes_received-6);
       nickName[bytes_received-7] = '\0';// Make last byte the null byte
