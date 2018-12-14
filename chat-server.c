@@ -38,17 +38,20 @@ int main(int argc, char *argv[])
 {
   // Allocate memory for clients
   clients = malloc(DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
+
   // Allocate memory for client_pids
   char *listen_port;
   struct addrinfo hints, *res;
   int rc;
   struct sockaddr_in remote_sa;
   int listen_fd;
-
   listen_port = argv[1];
 
   /* create a socket */
   listen_fd = socket(PF_INET, SOCK_STREAM, 0);
+  if(listen_fd == -1){
+    perror("Error creating listen socket.");
+  }
 
   /* bind it to a port */
   memset(&hints, 0, sizeof(hints));
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {
-    if(clientCounter > DEFAULT_CLIENT_COUNT){
+    if(clientCounter > DEFAULT_CLIENT_COUNT){ // Dynamically allocate more memory for new clients
       DEFAULT_CLIENT_COUNT = DEFAULT_CLIENT_COUNT * 2;
       clients = realloc(clients, DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
     }
@@ -79,6 +82,9 @@ int main(int argc, char *argv[])
     /* accept a new connection (will block until one appears) */
     socklen_t addrlen = sizeof(remote_sa);
     int conn_fd = accept(listen_fd, (struct sockaddr *) &remote_sa, &addrlen);
+    if(conn_fd == -1){
+      perror("Error accepting connection.");
+    }
 
     /* announce our communication partner */
     char *remote_ip = inet_ntoa(remote_sa.sin_addr);
@@ -102,9 +108,6 @@ int main(int argc, char *argv[])
       exit(1);
     }
     clientCounter++;
-    //printf("\n");
-    //pthread_join(client_thread, NULL);
-    //close(data_for_thread->conn_fd);
   }
 }
 

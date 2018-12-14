@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
   printf("Starting chat-client");
   char *dest_hostname, *dest_port;
   struct addrinfo hints, *res;
-  //int n;
   int rc;
 
   dest_hostname = argv[1];
@@ -33,9 +32,11 @@ int main(int argc, char *argv[])
 
   /* create a socket */
   conn_fd = socket(PF_INET, SOCK_STREAM, 0);
+  if(conn_fd == -1){
+    perror("Failed to create socket");
+  }
 
   /* client usually doesn't bind, which lets kernel pick a port number */
-
   /* but we do need to find the IP address of the server */
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
@@ -55,7 +56,6 @@ int main(int argc, char *argv[])
 
   /* infinite loop of reading from terminal, sending the data, and printing
   * what we get back */
-
   pthread_t listen_thread, write_thread;
   int ret;
   if((ret = pthread_create(&listen_thread, NULL, listenForCommands, NULL))){
@@ -69,8 +69,9 @@ int main(int argc, char *argv[])
   pthread_join(write_thread, NULL);
   pthread_join(listen_thread, NULL);
 
-  //fflush(stdout);
-  close(conn_fd);
+  if(close(conn_fd) == -1){
+    perror("Error closing connection");
+  }
 }
 
 
@@ -78,7 +79,6 @@ void* writeCommands(void *data){
   char buf[BUF_SIZE];
   int n;
   while((n = read(0, buf, BUF_SIZE)) > 0){
-    //puts(buf);
     int lenBuf = n;
     buf[lenBuf] = '\0';
     if (strcmp(buf,  "\n") == 0 && lenBuf == 1){
@@ -93,10 +93,7 @@ void* writeCommands(void *data){
         //printf("Sent input string of length %ld.\n", lenBuf);
       }
     }
-    // Clear buf
-    //printf("writeCommands returning");
   }
-
   if(send(conn_fd, "#&#SD9s", 8, 0) == -1){
     perror("Failed to send.");
   }
@@ -109,25 +106,20 @@ void* listenForCommands(void *data){
   char buf[BUF_SIZE];
   int n;
   while((n = recv(conn_fd, buf, BUF_SIZE, 0)) > 0){
-    //printf("N is greater than 0 (%d).\n", n);
-    //time_t currentTime = time(NULL);
-    //Get the current time
     time_t rawtime;
     struct tm * timeinfo;
-    time (&rawtime);
-    timeinfo = localtime (&rawtime);
-    char buffer[80];
-    strftime(buffer, 80,"%H:%M:%S: ", timeinfo);
-    //printf ( "Current local time and date: %s", asctime (timeinfo) );
-    printf("%s", buffer);
-    //printf("time is %d\n", currentTime );
-
-    puts(buf);
-
-    memset(buf, 0, strlen(buf));
+    if (time (&rawtime) == -1){
+      perror("Error getting time.");
+    }else{
+      timeinfo = localtime (&rawtime);
+      char buffer[80];
+      strftime(buffer, 80,"%H:%M:%S: ", timeinfo);
+      printf("%s", buffer);
+      puts(buf);
+      memset(buf, 0, strlen(buf));
+    }
   }
   puts("Connection closed by remote host.");
   exit(0);
   return NULL;
-  //fflush(stdout);
 }
