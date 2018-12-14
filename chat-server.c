@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {//
+    pthread_mutex_lock(&mutex);
     if(clientCounter > initial_client_count){ // Dynamically allocate more memory for new clients
       initial_client_count = initial_client_count * 2;
       clients = realloc(clients, initial_client_count * sizeof(ClientStruct));
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
       clients = realloc(clients, initial_client_count * sizeof(ClientStruct));
     }
     clients[clientCounter] = malloc(sizeof(struct ClientStruct));
+    pthread_mutex_unlock(&mutex);
     /* accept a new connection (will block until one appears) */
     socklen_t addrlen = sizeof(remote_sa);
     int conn_fd = accept(listen_fd, (struct sockaddr *) &remote_sa, &addrlen);
@@ -97,8 +99,9 @@ int main(int argc, char *argv[])
     char *remote_ip = inet_ntoa(remote_sa.sin_addr);
     uint16_t remote_port = ntohs(remote_sa.sin_port);
 
-    pthread_t client_thread;
 
+    pthread_t client_thread;
+    pthread_mutex_lock(&mutex);
     clients[clientCounter]->conn_fd = conn_fd;
     clients[clientCounter]->remote_ip = remote_ip;
     clients[clientCounter]->remote_port = remote_port;
@@ -115,6 +118,7 @@ int main(int argc, char *argv[])
       exit(1);
     }
     clientCounter++;
+    pthread_mutex_unlock(&mutex);
   }
 }
 
@@ -122,10 +126,12 @@ int main(int argc, char *argv[])
 void* client_func(void *data){
   int bytes_received = 0;
   char buf[BUF_SIZE];
+  pthread_mutex_lock(&mutex);
   struct ClientStruct *client_data = data;
   pid_t clientPID;
   clientPID = getpid();
   clients[client_data->clientNumber]->pid = clientPID; // Assigning pid to process
+  pthread_mutex_unlock(&mutex);
   /* receive and echo data until the other end closes the connection */
 
   while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > -1) {
