@@ -17,7 +17,6 @@
 #define BACKLOG 10
 #define BUF_SIZE 4096
 #define MAX_CLIENTS 256
-#define DEFAULT_CLIENT_COUNT 10
 #define MAX_NUMBER_OF_ARGS 100
 
 typedef struct ClientStruct{
@@ -27,13 +26,16 @@ typedef struct ClientStruct{
   int remote_port;
 }ClientStruct;
 
+int DEFAULT_CLIENT_COUNT = 2;
 void *client_func(void *data);
-struct ClientStruct *clients[DEFAULT_CLIENT_COUNT];
+struct ClientStruct **clients;
 int clientCounter = 0;
 int getNumberOfArgs(char** args);
 
 int main(int argc, char *argv[])
 {
+  // Allocate memory for clients
+  clients = malloc(DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
   // Allocate memory for client_pids
   char *listen_port;
   struct addrinfo hints, *res;
@@ -67,6 +69,10 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {
+    if(clientCounter > DEFAULT_CLIENT_COUNT){
+      DEFAULT_CLIENT_COUNT = DEFAULT_CLIENT_COUNT * 2;
+      clients = realloc(clients, DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
+    }
     clients[clientCounter] = malloc(sizeof(struct ClientStruct));
     /* accept a new connection (will block until one appears) */
     socklen_t addrlen = sizeof(remote_sa);
