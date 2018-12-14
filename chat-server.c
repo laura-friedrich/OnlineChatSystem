@@ -18,17 +18,19 @@
 #define BUF_SIZE 4096
 #define MAX_CLIENTS 256
 #define DEFAULT_CLIENT_COUNT 10
+#define MAX_NUMBER_OF_ARGS 100
 
 typedef struct ClientStruct{
-    int conn_fd;
-    char *name;
-    char *remote_ip;
-    int remote_port;
+  int conn_fd;
+  char *name;
+  char *remote_ip;
+  int remote_port;
 }ClientStruct;
 
 void *client_func(void *data);
 struct ClientStruct *clients[DEFAULT_CLIENT_COUNT];
 int clientCounter = 0;
+int getNumberOfArgs(char** args);
 
 int main(int argc, char *argv[])
 {
@@ -84,11 +86,11 @@ int main(int argc, char *argv[])
     // New client thread
     pthread_t client_thread;
     int ret = pthread_create(&client_thread, NULL, client_func, clients[clientCounter]);
-     if (ret) {
+    if (ret) {
       printf("ERROR: Return Code from pthread_create() is %d\n", ret);
       exit(1);
-     }
-     clientCounter++;
+    }
+    clientCounter++;
     //printf("\n");
     //pthread_join(client_thread, NULL);
     //close(data_for_thread->conn_fd);
@@ -103,71 +105,56 @@ void* client_func(void *data){
 
   /* receive and echo data until the other end closes the connection */
   while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > 0) {
-      if(bytes_received == -1){
-        perror("recv error");
-      }
-
-      //printf("Bytes recieved %d: ", bytes_received);
-      char subbuf[6];
-      memcpy(subbuf,buf,5);
-      //printf("subbuf is %s this sting\n",subbuf);
-      if(strcmp(subbuf, "/nick")==0){
-        char nickName[bytes_received];
-        printf("%d",bytes_received);
-        memcpy(nickName,(char*)buf+6,bytes_received-6);
-        printf("%s\n",nickName );
-
-        char sendBuf [40];
-        sprintf(sendBuf,"User %s (%s) is now known as %s", client_data->name, client_data->remote_ip, nickName );
-        client_data->name = nickName;
-        //printf()
-        for(int i = 0; i < clientCounter; i++){
-          if(send(clients[i]->conn_fd,sendBuf , sizeof(buf), 0) == -1){
-            perror("Error sending to all clients.");
-          }
-        }
-      }
-      else{
-        for(int i = 0; i < clientCounter; i++){
-          // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
-          //if()
-          char sendBuf [5095];
-          //printf("%s",client_data->name);
-          sprintf(sendBuf, "%s: %s", client_data->name, buf);
-          printf("%s\n", sendBuf);
-
-
-          if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
-            perror("Error sending to all clients.");
-          }
-           //if(send(clients[i]->conn_fd, buf, sizeof(buf), 0) == -1){
-             //perror("Error sending to all clients.");
-           //}
-
-      }
-      // Change username
-      fflush(stdout);
-
-      /* send it back */
-      // if(send(client_data->conn_fd, buf, bytes_received, 0) == -1){
-      //   perror("Send error");
-      // }
-
-      // Get the current time
-      // time_t rawtime;
-      // struct tm * timeinfo;
-      // time (&rawtime);
-      // timeinfo = localtime (&rawtime);
-        //printf ( "Current local time and date: %s", asctime (timeinfo) );
-      // Send message to all clients
-
-         // if(send(clients[i]->conn_fd, timeinfo, sizeof(timeinfo), 0) == -1){
-         //    perror("Error sending tieminfo to all clients.");
-         //  }
-       }
-
-      //read(0, buf, 1);
+    if(bytes_received == -1){
+      perror("recv error");
     }
 
+    //printf("Bytes recieved %d: ", bytes_received);
+    char subbuf[6];
+    memcpy(subbuf,buf,5);
+    //printf("subbuf is %s this sting\n",subbuf);
+    if(strcmp(subbuf, "/nick")==0){
+      char nickName[bytes_received];
+      memcpy(nickName,(char*)buf+6,bytes_received-6);
+      char sendBuf [40];
+      sprintf(sendBuf,"User %s (%s) is now known as %s", client_data->name, client_data->remote_ip, nickName);
+      puts(sendBuf);
+      client_data->name = malloc(strlen(nickName) + 1);
+      strcpy(client_data->name , nickName);
+      //printf()
+      for(int i = 0; i < clientCounter; i++){
+        if(send(clients[i]->conn_fd,sendBuf , sizeof(buf), 0) == -1){
+          perror("Error sending to all clients.");
+        }
+      }
+    }
+    else{
+      for(int i = 0; i < clientCounter; i++){
+
+        char sendBuf [5095];
+        sprintf(sendBuf, "%s: %s", client_data->name, buf);
+
+        if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
+          perror("Error sending to all clients.");
+        }
+      }
+      fflush(stdout);
+
+    }
+
+  }
+
   return NULL;
+}
+
+int getNumberOfArgs(char** args){
+  int argCounter = 0;
+  for(int i = 0; i < MAX_NUMBER_OF_ARGS; i++){
+    if(args[i] != NULL){
+      argCounter++;
+    }else{
+      break;
+    }
+  }
+  return argCounter;
 }
