@@ -19,6 +19,8 @@
 #define BUF_SIZE 4096
 #define MAX_NUMBER_OF_ARGS 100
 
+pthread_mutex_t mutex;
+
 typedef struct ClientStruct{
   int conn_fd;
   char *name;
@@ -29,14 +31,14 @@ typedef struct ClientStruct{
   int clientNumber;
 }ClientStruct;
 
-int DEFAULT_CLIENT_COUNT = 2;
+int initial_client_count = 2;
 void *client_func(void *data);
 struct ClientStruct **clients;
 int clientCounter = 0;
 int main(int argc, char *argv[])
 {
   // Allocate memory for clients
-  clients = malloc(DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
+  clients = malloc(initial_client_count * sizeof(ClientStruct));
 
   // Allocate memory for client_pids
   char *listen_port;
@@ -75,9 +77,9 @@ int main(int argc, char *argv[])
 
   /* infinite loop of accepting new connections and handling them */
   while(1) {
-    if(clientCounter > DEFAULT_CLIENT_COUNT){ // Dynamically allocate more memory for new clients
-      DEFAULT_CLIENT_COUNT = DEFAULT_CLIENT_COUNT * 2;
-      clients = realloc(clients, DEFAULT_CLIENT_COUNT * sizeof(ClientStruct));
+    if(clientCounter > initial_client_count){ // Dynamically allocate more memory for new clients
+      initial_client_count = initial_client_count * 2;
+      clients = realloc(clients, initial_client_count * sizeof(ClientStruct));
     }
     clients[clientCounter] = malloc(sizeof(struct ClientStruct));
     /* accept a new connection (will block until one appears) */
@@ -122,7 +124,9 @@ void* client_func(void *data){
   clientPID = getpid();
   clients[client_data->clientNumber]->pid = clientPID; // Assigning pid to process
   /* receive and echo data until the other end closes the connection */
+
   while((bytes_received = recv(client_data->conn_fd, buf, BUF_SIZE, 0)) > -1) {
+    pthread_mutex_lock(&mutex);
     buf[bytes_received] = '\0';// Make last byte the null byte
     if(bytes_received == 0){
       //free(clients[client_data->clientNumber]);
@@ -137,7 +141,7 @@ void* client_func(void *data){
         }
       }
 
-      for (int c = client_data->clientNumber; c < DEFAULT_CLIENT_COUNT; c++){ // Reassign other indices of clients
+      for (int c = client_data->clientNumber; c < initial_client_count; c++){ // Reassign other indices of clients
          clients[c + 1]->clientNumber = c;
          clients[c] = clients[c+1];
        }
@@ -174,6 +178,8 @@ void* client_func(void *data){
       }
       fflush(stdout);
     }
+    pthread_mutex_unlock(&mutex);
   }
+
   return NULL;
 }
