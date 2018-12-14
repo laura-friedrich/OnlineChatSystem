@@ -76,9 +76,12 @@ int main(int argc, char *argv[])
   }
 
   /* infinite loop of accepting new connections and handling them */
-  while(1) {
+  while(1) {//
     if(clientCounter > initial_client_count){ // Dynamically allocate more memory for new clients
       initial_client_count = initial_client_count * 2;
+      clients = realloc(clients, initial_client_count * sizeof(ClientStruct));
+    }else if(clientCounter < initial_client_count * 2){ // Dynamically allocate less memory if clients have left
+      initial_client_count = initial_client_count / 2;
       clients = realloc(clients, initial_client_count * sizeof(ClientStruct));
     }
     clients[clientCounter] = malloc(sizeof(struct ClientStruct));
