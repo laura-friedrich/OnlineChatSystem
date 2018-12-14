@@ -132,7 +132,9 @@ void* client_func(void *data){
           // printf("Trying to send message to client %d, conn_fd %d.\n", i, clients[i]->conn_fd);
           //if()
           char sendBuf [5095];
+          //printf("%s",client_data->name);
           sprintf(sendBuf, "%s: %s", client_data->name, buf);
+          printf("%s\n", sendBuf);
 
 
           if(send(clients[i]->conn_fd, sendBuf, sizeof(buf), 0) == -1){
