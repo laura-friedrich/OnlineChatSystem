@@ -78,24 +78,26 @@ void* writeCommands(void *data){
   char buf[BUF_SIZE];
   int n;
   while((n = read(0, buf, BUF_SIZE)) > 0){
-    int lenBuf = strlen(buf);
+    //puts(buf);
+    int lenBuf = n;
+    buf[lenBuf] = '\0';
     if (strcmp(buf,  "\n") == 0 && lenBuf == 1){
       // Don't do anything if empty input
     }else{
-      int length = strlen(buf); // Take off the newline character
-      char inputText[length - 1];
-      strncpy(inputText, buf, length - 1);
+      char inputText[lenBuf - 1];
+      strncpy(inputText, buf, lenBuf - 1);
+      inputText[lenBuf - 1] = '\0';
       if(send(conn_fd, inputText, n, 0) == -1){
         perror("Failed to send.");
+      }else{
+        //printf("Sent input string of length %ld.\n", lenBuf);
       }
-
     }
-    buf[0] = '\0';
     // Clear buf
     //printf("writeCommands returning");
   }
 
-  if(send(conn_fd, "Exiting", 8, 0) == -1){
+  if(send(conn_fd, "#&#SD9s", 8, 0) == -1){
     perror("Failed to send.");
   }
   puts("Exiting.");
@@ -122,8 +124,10 @@ void* listenForCommands(void *data){
 
     puts(buf);
 
-    buf[0] = '\0';
+    memset(buf, 0, strlen(buf));
   }
+  puts("Connection closed by remote host.");
+  exit(0);
   return NULL;
   //fflush(stdout);
 }
