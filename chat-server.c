@@ -125,7 +125,7 @@ void* client_func(void *data){
       char sendBuf [40];
       sprintf(sendBuf,"User %s (%s:%d) is now known as %s", client_data->name, client_data->remote_ip, client_data->remote_port, nickName);
       puts(sendBuf);
-      client_data->name = malloc(strlen(nickName) + 1);
+      client_data->name = malloc(sizeofs(nickName) + 1);
       strcpy(client_data->name , nickName);
       //printf()
       for(int i = 0; i < clientCounter; i++){

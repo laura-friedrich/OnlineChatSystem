@@ -90,7 +90,7 @@ void* writeCommands(void *data){
       }
 
     }
-    memset(buf, 0, strlen(buf));
+    buf[0] = '\0';
     // Clear buf
     //printf("writeCommands returning");
   }
@@ -122,7 +122,7 @@ void* listenForCommands(void *data){
 
     puts(buf);
 
-    memset(buf, 0, strlen(buf));
+    buf[0] = '\0';
   }
   return NULL;
   //fflush(stdout);
